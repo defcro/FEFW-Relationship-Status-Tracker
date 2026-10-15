@@ -249,12 +249,12 @@ function side(nodes,full,multi){
   const legend=`<div class="grp">Line weight</div>`+["A","B","C"].map(w=>`<div class="lg"><span class="bar" style="height:${Math.max(2,STROKE[w]/1.6)}px"></span>${LABEL[w]}</div>`).join("");
   if(full){h=`<h2>Everyone</h2><p class="sub">${names.length} people · ${edges.length} relationships</p><p class="sub">Search above to focus on one person, then add more names to see who they have in common.</p>`+legend;}
   else if(!multi){const c=sel[0],nb=adj[c];h=`<h2>${names[c]}</h2>`+charFoods(c)+`<p class="sub" style="margin:16px 0 0">${nb.length} connection${nb.length===1?"":"s"}</p>`;
-    ["A","B","C"].forEach(w=>{const l=nb.filter(x=>x.w===w).map(x=>x.id).sort((a,b)=>names[a].localeCompare(names[b]));
+    ["A","B","C"].forEach(w=>{const l=nb.filter(x=>x.w===w).map(x=>x.id).sort((a,b)=>a-b);
       if(!l.length)return;h+=`<div class="grp"><span class="bar" style="height:${Math.max(2,STROKE[w]/1.6)}px"></span>${LABEL[w]}</div>`+l.map(id=>chipHtml(id)).join("");});}
   else{const others=nodes.filter(d=>!d.isSel);
     const ws=id=>sel.map(x=>tie(x,id)||"–").join("·");
     const all=others.filter(d=>d.n===sel.length), some=others.filter(d=>d.n>1&&d.n<sel.length), one=others.filter(d=>d.n===1);
-    const sorter=(a,b)=>b.n-a.n||a.name.localeCompare(b.name);
+    const sorter=(a,b)=>b.n-a.n||a.id-b.id;
     h=`<h2>Overlap</h2><p class="sub">${sel.map(i=>names[i]).join(", ")}<br>Letters show each tie in that order.</p>`+commonFoods();
     h+=`<div class="grp"><span class="dot" style="background:var(--accent)"></span>Connected to all ${sel.length} (${all.length})</div>`;
     h+=all.length?all.sort(sorter).map(d=>chipHtml(d.id,ws(d.id))).join(""):`<p class="sub">No one is connected to all of them.</p>`;
@@ -300,8 +300,8 @@ function commonFoods(){
 function pairSection(){
   if(sel.length||foodSel.length!==1)return '';
   const f=foodSel[0], rows=[];
-  ALLEDGES.forEach(e=>{if(rt(e.a,f)>=3&&rt(e.b,f)>=3&&!isComplete(e)){const cur=LV.filter(l=>done.has(pk(e.a,e.b,l))).pop()||'None';rows.push({t:names[Math.min(e.a,e.b)]+' & '+names[Math.max(e.a,e.b)],cur,max:e.w});}});
-  const R={A:3,B:2,C:1,None:0};rows.sort((x,y)=>R[y.max]-R[x.max]||R[y.cur]-R[x.cur]||x.t.localeCompare(y.t));
+  ALLEDGES.forEach(e=>{if(rt(e.a,f)>=3&&rt(e.b,f)>=3&&!isComplete(e)){const cur=LV.filter(l=>done.has(pk(e.a,e.b,l))).pop()||'None';rows.push({t:names[Math.min(e.a,e.b)]+' & '+names[Math.max(e.a,e.b)],lo:Math.min(e.a,e.b),hi:Math.max(e.a,e.b),cur,max:e.w});}});
+  const R={A:3,B:2,C:1,None:0};rows.sort((x,y)=>R[y.max]-R[x.max]||R[y.cur]-R[x.cur]||x.lo-y.lo||x.hi-y.hi);
   const h=`<div class='grp'>Both like it, not yet maxed (${rows.length})</div>`;
   if(!rows.length)return h+`<p class='sub'>None.</p>`;
   return h+rows.map(r=>`<div class='rl'><span>${r.t}</span><span>${r.cur} / ${r.max}</span></div>`).join('')+`<p class='sub' style='margin-top:6px'>Shown as current status / max status.</p>`;
@@ -311,8 +311,8 @@ function foodPanel(nodes){
   const pool=nodes.map(d=>d.id), by={4:[],3:[],2:[]};
   pool.forEach(id=>{const r=minRate(id);if(by[r])by[r].push(id);});
   const n=by[4].length+by[3].length+by[2].length;
-  let h=`<div class="fpanel"><h2>${foodSel.map(k=>FOODS[k]).join(" + ")}</h2><p class="sub">${n} ${sel.length?"of the people shown":"characters"} rated ${foodSel.length>1?"all of these":"it"} 2 or higher.${foodSel.length>1?" Grouped by their lowest rating.":""}</p>`;
-  [4,3,2].forEach(r=>{if(!by[r].length)return;h+=`<div class="grp">${RL[r]} (${by[r].length})</div>`+by[r].sort((a,b)=>names[a].localeCompare(names[b])).map(id=>`<button class="chip" data-id="${id}">${names[id]}</button>`).join("");});
+  let h=`<div class="fpanel"><h2>${foodSel.map(k=>FOODS[k]).join(" + ")}</h2><p class="sub">${n} ${sel.length?"of the people shown":"characters"} rated ${foodSel.length>1?"all of these":"it"} “Fine with” or higher.${foodSel.length>1?" Grouped by their lowest rating.":""}</p>`;
+  [4,3,2].forEach(r=>{if(!by[r].length)return;h+=`<div class="grp">${RL[r]} (${by[r].length})</div>`+by[r].sort((a,b)=>a-b).map(id=>`<button class="chip" data-id="${id}">${names[id]}</button>`).join("");});
   h+=pairSection();return h+"</div>";
 }
 const fq=$("#fq"), fdrop=$("#fdrop");

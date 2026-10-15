@@ -349,10 +349,10 @@ const remaining=id=>ADJALL[id].filter(x=>LV.slice(0,WR[x.w]).some(l=>!done.has(p
 const sbtn=(a,b,l)=>{const k=pk(a,b,l),on=done.has(k);return `<button type='button' class='sb ${on?'on':'off'}' data-k='${k}' aria-pressed='${on}'>${l}</button>`;};
 function buildStatus(){
   const box=$('#slist');box.innerHTML='';
-  names.map((_,i)=>i).sort((a,b)=>names[a].localeCompare(names[b])).forEach(id=>{
+  names.map((_,i)=>i).forEach(id=>{
     const d=document.createElement('details');d.className='ov';d.dataset.id=id;d.dataset.name=names[id].toLowerCase();
-    const rows=ADJALL[id].slice().sort((x,y)=>names[x.id].localeCompare(names[y.id])).map(x=>`<div class='srow'><span>${names[x.id]}</span><span class='sbs'>${LV.map(l=>WR[l]<=WR[x.w]?sbtn(id,x.id,l):'<span></span>').join('')}</span></div>`).join('');
-    d.innerHTML=`<summary>${names[id]} - <span data-cnt='${id}'>${remaining(id)}</span></summary>${rows||`<div class='dh'>No connections</div>`}`;
+    const rows=ADJALL[id].slice().sort((x,y)=>x.id-y.id).map(x=>`<div class='srow'><span>${names[x.id]}</span><span class='sbs'>${LV.map(l=>WR[l]<=WR[x.w]?sbtn(id,x.id,l):'<span></span>').join('')}</span></div>`).join('');
+    d.innerHTML=`<summary>${names[id]} - <span data-cnt='${id}'>${remaining(id)}</span> out of ${ADJALL[id].length} remaining</summary>${rows||`<div class='dh'>No connections</div>`}`;
     box.appendChild(d);});
   resort();
 }
@@ -364,7 +364,7 @@ $('#slist').addEventListener('click',e=>{const b=e.target.closest('.sb');if(!b)r
   persist();dirty=true;resort();b.focus();});
 $('#mq').addEventListener('input',e=>{const t=e.target.value.trim().toLowerCase();[...$('#slist').children].forEach(d=>d.style.display=d.dataset.name.includes(t)?'':'none');});
 function resort(){const box=$('#slist'),zero=d=>remaining(+d.dataset.id)===0;
-  const want=[...box.children].sort((x,y)=>zero(x)-zero(y)||x.dataset.name.localeCompare(y.dataset.name));
+  const want=[...box.children].sort((x,y)=>zero(x)-zero(y)||+x.dataset.id-+y.dataset.id);
   want.forEach((el,i)=>{el.classList.toggle('done',zero(el));if(box.children[i]!==el)box.insertBefore(el,box.children[i]||null);});}
 function toast(m){const t=document.createElement('div');t.className='toast';t.setAttribute('role','status');t.textContent=m;document.body.appendChild(t);setTimeout(()=>t.remove(),2200);}
 $('#mweb').addEventListener('click',()=>{webOn=!webOn;const b=$('#mweb');b.classList.toggle('on',webOn);b.classList.toggle('off',!webOn);b.setAttribute('aria-pressed',webOn);dirty=true;});

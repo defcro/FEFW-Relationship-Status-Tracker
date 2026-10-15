@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Character Relationships</title>
+<title>FEFW Relationship Status Tracker</title>
 <style>
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
 --bg:#f7f5f1;--panel:#fff;--ink:#1f1d1a;--muted:#6f6a62;--line:#d9d4ca;--accent:#b4472b;--a:#b4472b;--b:#d9894f;--c:#e8c9a8;--edge:#3a352e;color-scheme:light}
@@ -76,6 +76,12 @@ textarea{width:100%;height:200px;font:12px monospace;background:var(--bg);color:
 .wl.on{background:#2e7d4f;border-color:#2e7d4f;color:#fff}.wl.off{background:#c0392b;border-color:#c0392b;color:#fff}
 .ov.done>summary{color:var(--muted)}
 .toast{position:fixed;left:50%;bottom:12vh;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:99px;z-index:60;font-size:15px;box-shadow:0 4px 16px rgba(0,0,0,.35)}
+.consent{display:none;position:fixed;left:0;right:0;bottom:0;z-index:70;flex-direction:column;gap:12px;background:var(--panel);color:var(--ink);border-top:1px solid var(--line);box-shadow:0 -4px 18px rgba(0,0,0,.25);padding:14px 16px calc(14px + env(safe-area-inset-bottom,0px))}
+.consent.open{display:flex}
+.consent p{margin:0;font-size:14px;line-height:1.45}
+#cacc{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.linkbtn{background:none;border:0;color:var(--muted);text-decoration:underline;font:inherit;font-size:13px;cursor:pointer;padding:6px;align-self:center}
+@media (min-width:721px){.consent{flex-direction:row;align-items:center}.consent .mfoot{flex:none;width:260px}}
 /* ---- Mobile & tablet layout (below 1025px) ---- */
 body{height:100dvh}
 body{overflow:hidden}
@@ -153,13 +159,15 @@ aside{display:flex!important;flex-direction:column;flex:none;width:300px;border-
     <div id="slist"></div>
     <div id="impbox" class="impbox"><textarea id="imptxt" placeholder="Paste exported user data here…" aria-label="Paste exported user data"></textarea><div class="mfoot"><button class="ghost" id="impgo" type="button">Apply import</button><button class="ghost" id="impcancel" type="button">Cancel</button></div></div>
     <div class="mfoot"><button class="ghost" id="mimp" type="button">Import</button><button class="ghost wl on" id="mweb" type="button" aria-pressed="true">Web Link</button><button class="ghost" id="mexp" type="button">Export</button></div>
+    <button class="linkbtn" id="cset" type="button">Cookie settings</button>
   </div>
 </div>
 
+<div id="consent" class="consent" role="dialog" aria-label="Cookie notice"><p><b>Cookies.</b> This site uses a cookie called “FEFW Relationship Status” to save your progress on this device for up to a year, and Google Analytics cookies to see how the site is used. If you decline, nothing is saved: your progress lasts only until you refresh or close the page, and you can still export it. We remember your choice on this device. You can change it any time under Cookie settings in Current Status.</p><div class="mfoot"><button class="ghost" id="cdec" type="button">Decline</button><button class="ghost" id="cacc" type="button">Accept</button></div></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
 <script>
 // ---- Data (from the "Character Relationships" tab) ----
-let names = "Cai,Peter,Tialla,Ultand,Dietrich,Fabio,Esmeralda,Mikaela,Theodora,Bonaventure,Tobias,Lilian,Lysander,Leda,Buccar,Sirocco,Olympia,Mu,Bertrand,Gaitz,Jester,Goliath,Dante,Orchel,Diego,Loretta,Seteth,Ninae,Anatolia,Nezha,Halvin,Dadao,Sha Lan,Talimun,Ursula,Ludia,Fianna,Simon,Guzran,Yang Jie,Io,Peppe,Noctula,Sofia,Catania,Nydine,Zarcone,Majide,Benditz,Inyoni,Jasmine,Alexandra,Nuzzuo,Kiroc,Centurio".split(",");
+let names = "Cai,Peter,Tialla,Ultand,Dietrich,Fabio,Esmeralda,Mikaela,Theodora,Bonaventure,Tobias,Lilian,Lysander,Leda,Buccar,Sirocco,Mu,Olympia,Bertrand,Gaitz,Jester,Goliath,Dante,Orchel,Diego,Loretta,Seteth,Ninae,Anatolia,Nezha,Halvin,Dadao,Sha Lan,Talimun,Ursula,Ludia,Fianna,Simon,Guzran,Yang Jie,Io,Peppe,Noctula,Sofia,Catania,Nydine,Zarcone,Majide,Benditz,Inyoni,Jasmine,Alexandra,Nuzzuo,Kiroc,Centurio".split(",");
 const SPARSE = "1:0A;2:0A,1A;3:0A,1A,2A;4:0A;5:4A;6:0A,4A,5A;7:4A,5A,6A;8:0A,2B,4A;9:2A,8B;10:3B,5A,8A,9A;11:8A,9A,10A;12:6A,8A,9A,10A,11A;13:0A,4A,6B,8A;14:4B,13A;15:13A,14A;16:0B,1A,7B,11B,13A,14A,15A;17:10A,13A,14A,15A,16A;18:0A,8B;19:11B;20:1B,7B,13B,14B;21:0B,3A,17A,19A,20A;22:13B,15B,19C,20A,21A;23:3C,9B,13B;24:6A,8C,11B;25:3B,7B,10B,21A;26:2B,4C,22B,24C,25A;27:0B,1B,12B,15B,23C,24A;28:0A,5B,10B,15C,22C;29:3B,5B,8A;30:4A,5B,9B,20A,24B,29C;31:1B,6B,14B,26A,29A;32:15A,24C,25B,29B,30A;33:2B,4A,8B,11B,13A,18A,22B;34:1B,9B,15B,19A;35:2B,6B,14A,19B,26B;36:13B,18B,24C,33B,34A,35B;37:7A,8B,11A,27B,33B,34A,35A,36A;38:7B,13B,16C;39:25B,28B,32B;40:2B,24B;41:3B,17B,28B;42:20B,21B;43:1B,7B,10C;44:4B,12B;45:9C,11B,22B;46:19C,30C,37C;47:23C,29C;48:35B;49:32B;50:14B,17C,33B;51:0A,8C,15C,17B,19A;52:24C;53:6C;54:0C,3C";
 let edges = [];
 SPARSE.split(";").forEach(r=>{const [i,list]=r.split(":");list.split(",").forEach(t=>edges.push({a:+i,b:+t.slice(0,-1),w:t.slice(-1)}));});
@@ -267,7 +275,7 @@ function detailHtml(id){
     fd=`<div class="dh">Foods ${names[id]} likes</div>`+(ks.length?ks.map(fr).join(""):row(/^0+$/.test(RT[id])?"No food data":"None",""));}
   return `<details class="ov"><summary>${names[id]}</summary><div class="dh">Relationship with…</div>${rel}<hr>${fd}<button class="ghost add" data-id="${id}">Add to selection</button></details>`;
 }
-const RT="443443444443 433434344424 124223143123 343343343343 223324234224 431233413444 233324244134 431232412443 332332332132 241143224343 441223421443 443444443443 442333332332 331133313333 112132314334 431213411233 323422332122 114213123114 000000000000 221122312233 113222223223 431432412432 313313313313 444444444444 212331323422 224434343333 232222211132 223312231122 333333333333 224333334334 224323133212 443443444443 332233323333 442244424444 123123123123 333313431144 441111211211 224323133212 442244424444 221123213223 412313411213 343343343343 212321322322 444444444444 222222322233 133232142132 441114214124 331133313333 333343334433 000000000000 132142133232 334334334334 000321000000 441143423443 444424442244".split(" ");
+const RT="443443444443 433434344424 124223143123 343343343343 223324234224 431233413444 233324244134 431232412443 332332332132 241143224343 441223421443 443444443443 442333332332 331133313333 112132314334 431213411233 114213123114 323422332122 000000000000 221122312233 113222223223 431432412432 313313313313 444444444444 212331323422 224434343333 232222211132 223312231122 333333333333 224333334334 224323133212 443443444443 332233323333 442244424444 123123123123 333313431144 441111211211 224323133212 442244424444 221123213223 412313411213 343343343343 212321322322 444444444444 222222322233 133232142132 441114214124 331133313333 333343334433 000000000000 132142133232 334334334334 000321000000 441143423443 444424442244".split(" ");
 const RL={4:"Loves",3:"Likes",2:"Fine with"};
 function charFoods(c){
   if(/^0+$/.test(RT[c]))return `<p class="sub">No food data.</p>`;
@@ -283,7 +291,21 @@ const lop=l=>foodSel.length&&!(fok(l.source.id)&&fok(l.target.id))?.08:null;
 function sharedFoods(ids){return FOODS.map((_,k)=>k).filter(k=>ids.every(id=>rt(id,k)>=3));}
 function foodList(ids){return sharedFoods(ids).map(k=>ids.every(id=>rt(id,k)===4)?`<b>${FOODS[k]}</b>`:FOODS[k]).join(", ");}
 function foodHtml(ids){const l=foodList(ids);return l?`<div class="foods">${ids.length===2?"Both like":"All like"}: ${l}</div>`:"";}
-function commonFoods(){const l=foodList(sel);return `<div class="grp">Foods you all like</div><p class="sub" style="margin:0 0 4px">${l||"None in common."}${l?"<br>Bold = everyone loves it.":""}</p>`;}
+function commonFoods(){
+  const all=k=>sel.every(id=>rt(id,k)>=3);
+  const ks=FOODS.map((_,k)=>k).filter(k=>sel.some(id=>rt(id,k)>=3)).sort((a,b)=>all(b)-all(a));
+  const l=ks.map(k=>all(k)?`<b>${FOODS[k]}</b>`:FOODS[k]).join(", ");
+  return `<div class="grp">Foods you like</div><p class="sub" style="margin:0 0 4px">${l||"None."}${l?"<br>Bold = everyone likes or loves it.":""}</p>`;
+}
+function pairSection(){
+  if(sel.length||foodSel.length!==1)return '';
+  const f=foodSel[0], rows=[];
+  ALLEDGES.forEach(e=>{if(rt(e.a,f)>=3&&rt(e.b,f)>=3&&!isComplete(e)){const cur=LV.filter(l=>done.has(pk(e.a,e.b,l))).pop()||'None';rows.push({t:names[Math.min(e.a,e.b)]+' & '+names[Math.max(e.a,e.b)],cur,max:e.w});}});
+  const R={A:3,B:2,C:1,None:0};rows.sort((x,y)=>R[y.max]-R[x.max]||R[y.cur]-R[x.cur]||x.t.localeCompare(y.t));
+  const h=`<div class='grp'>Both like it, not yet maxed (${rows.length})</div>`;
+  if(!rows.length)return h+`<p class='sub'>None.</p>`;
+  return h+rows.map(r=>`<div class='rl'><span>${r.t}</span><span>${r.cur} / ${r.max}</span></div>`).join('')+`<p class='sub' style='margin-top:6px'>Shown as current status / max status.</p>`;
+}
 function foodPanel(nodes){
   if(!foodSel.length)return "";
   const pool=nodes.map(d=>d.id), by={4:[],3:[],2:[]};
@@ -291,14 +313,14 @@ function foodPanel(nodes){
   const n=by[4].length+by[3].length+by[2].length;
   let h=`<div class="fpanel"><h2>${foodSel.map(k=>FOODS[k]).join(" + ")}</h2><p class="sub">${n} ${sel.length?"of the people shown":"characters"} rated ${foodSel.length>1?"all of these":"it"} 2 or higher.${foodSel.length>1?" Grouped by their lowest rating.":""}</p>`;
   [4,3,2].forEach(r=>{if(!by[r].length)return;h+=`<div class="grp">${RL[r]} (${by[r].length})</div>`+by[r].sort((a,b)=>names[a].localeCompare(names[b])).map(id=>`<button class="chip" data-id="${id}">${names[id]}</button>`).join("");});
-  return h+"</div>";
+  h+=pairSection();return h+"</div>";
 }
 const fq=$("#fq"), fdrop=$("#fdrop");
 function fmatch(t){t=t.trim().toLowerCase();return FOODS.map((n,k)=>({n,k})).filter(o=>!foodSel.includes(o.k)&&(!t||o.n.toLowerCase().includes(t)));}
 function fshow(){const m=fmatch(fq.value);fdrop.innerHTML="";m.forEach((o,i)=>{const b=document.createElement("button");b.type="button";b.textContent=o.n;if(!i)b.className="on";b.onmousedown=e=>{e.preventDefault();fadd(o.k)};fdrop.appendChild(b);});fdrop.style.display=m.length?"block":"none";}
 fq.addEventListener("input",fshow);fq.addEventListener("focus",fshow);fq.addEventListener("blur",()=>fdrop.style.display="none");
 fq.addEventListener("keydown",e=>{if(e.key==="Enter"){const m=fmatch(fq.value);if(m[0])fadd(m[0].k);}if(e.key==="Backspace"&&!fq.value&&foodSel.length)fremove(foodSel[foodSel.length-1]);});
-function fadd(k){if(!foodSel.includes(k))foodSel.push(k);fq.value="";fdrop.style.display="none";render();}
+function fadd(k){foodSel=[k];fq.value="";fdrop.style.display="none";render();}
 function fremove(k){foodSel=foodSel.filter(x=>x!==k);render();}
 function ftags(){const t=$("#ftags");t.innerHTML="";foodSel.forEach(k=>{const s=document.createElement("span");s.className="tag f";s.textContent=FOODS[k];const b=document.createElement("button");b.textContent="×";b.setAttribute("aria-label","Remove "+FOODS[k]);b.onclick=()=>fremove(k);s.appendChild(b);t.appendChild(s);});}
 // ---- Current Status tracker (popup) ----
@@ -307,6 +329,7 @@ const pk=(a,b,l)=>Math.min(a,b)+'-'+Math.max(a,b)+'-'+l;
 const ALLEDGES=edges.slice(), ADJALL=names.map(()=>[]);
 ALLEDGES.forEach(e=>{ADJALL[e.a].push({id:e.b,w:e.w});ADJALL[e.b].push({id:e.a,w:e.w});});
 const CK='FEFW Relationship Status';
+let consent=null;try{consent=localStorage.getItem('fefw-consent');}catch(e){}
 function encodeStatus(){const m=new Map();done.forEach(k=>{const [a,b]=k.split('-'),p=a+'-'+b;m.set(p,(m.get(p)||0)+1);});return 'v1~'+[...m].map(([p,n])=>p+'-'+n).join('_');}
 function decodeStatus(str){if(typeof str!=='string'||!str.startsWith('v1~'))return null;const out=new Set();
   str.slice(3).split('_').filter(Boolean).forEach(t=>{const [a,b,n]=t.split('-').map(Number);if(!(a>=0&&b>=0&&a<names.length&&b<names.length&&n>=1&&n<=3))return;const e=ADJALL[a].find(x=>x.id===b);if(!e)return;for(let i=0;i<Math.min(n,WR[e.w]);i++)out.add(pk(a,b,LV[i]));});
@@ -314,7 +337,7 @@ function decodeStatus(str){if(typeof str!=='string'||!str.startsWith('v1~'))retu
 function readCookie(){try{const hit=document.cookie.split(';').map(s=>s.trim()).find(s=>s.startsWith(CK+'='));return hit?hit.slice(CK.length+1):null;}catch(e){return null;}}
 function writeCookie(v){try{document.cookie=`${CK}=${v}; path=/; max-age=31536000; SameSite=Lax${location.protocol==='https:'?'; Secure':''}`;}catch(e){}}
 function clearCookie(){try{document.cookie=`${CK}=; path=/; max-age=0`;}catch(e){}}
-function persist(){const v=encodeStatus();writeCookie(v);try{localStorage.setItem('rel-status-v2',v);}catch(e){}}
+function persist(){if(consent!=='granted')return;const v=encodeStatus();writeCookie(v);try{localStorage.setItem('rel-status-v2',v);}catch(e){}}
 let done=decodeStatus(readCookie()||'');
 if(!done){try{done=decodeStatus(localStorage.getItem('rel-status-v2')||'');}catch(e){}}
 if(!done){done=new Set();try{done=new Set(JSON.parse(localStorage.getItem('rel-status-v1')||'[]'));}catch(e){}
@@ -361,6 +384,20 @@ function openStatus(){if(!$('#slist').children.length)buildStatus();modal.classL
 function closeStatus(){modal.classList.remove('open');if(dirty){dirty=false;render();}document.querySelectorAll(bgSel).forEach(x=>x.inert=false);($('#status').offsetParent?$('#status'):$('#status2')).focus();}
 $('#status').addEventListener('click',openStatus);$('#status2').addEventListener('click',openStatus);$('#mret').addEventListener('click',closeStatus);
 addEventListener('keydown',e=>{if(e.key==='Escape'&&modal.classList.contains('open'))closeStatus();});
+
+// ---- Cookie notice, consent & analytics ----
+const GA_ID='G-PQLKRXZ2NQ';
+function loadGA(){if(window.__gaLoaded)return;window.__gaLoaded=true;window['ga-disable-'+GA_ID]=false;window.dataLayer=window.dataLayer||[];window.gtag=function(){dataLayer.push(arguments);};gtag('js',new Date());gtag('config',GA_ID);const s=document.createElement('script');s.async=true;s.src='https://www.googletagmanager.com/gtag/js?id='+GA_ID;document.head.appendChild(s);}
+function setConsent(v){consent=v;try{localStorage.setItem('fefw-consent',v);}catch(e){}
+  $('#consent').classList.remove('open');
+  if(v==='granted'){persist();loadGA();toast('Cookies accepted');}
+  else{clearCookie();try{localStorage.removeItem('rel-status-v2');localStorage.removeItem('rel-status-v1');}catch(e){}
+    window['ga-disable-'+GA_ID]=true;if(window.gtag)gtag('consent','update',{analytics_storage:'denied'});toast('Cookies declined');}}
+$('#cacc').addEventListener('click',()=>setConsent('granted'));
+$('#cdec').addEventListener('click',()=>setConsent('denied'));
+$('#cset').addEventListener('click',()=>$('#consent').classList.add('open'));
+if(consent==='granted')loadGA();
+if(!consent)$('#consent').classList.add('open');
 
 // ---- Mobile/tablet: switch between graph and detailed report ----
 const stage=$("#stage"), tog=$("#toggle");

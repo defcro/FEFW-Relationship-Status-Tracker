@@ -163,7 +163,7 @@ aside{display:flex!important;flex-direction:column;flex:none;width:300px;border-
   </div>
 </div>
 
-<div id="consent" class="consent" role="dialog" aria-label="Cookie notice"><p><b>Cookies.</b> This site uses a cookie called “FEFW Relationship Status” to save your progress on this device for up to a year, and Google Analytics cookies to see how the site is used. If you decline, nothing is saved: your progress lasts only until you refresh or close the page, and you can still export it. We remember your choice on this device. You can change it any time under Cookie settings in Current Status.</p><div class="mfoot"><button class="ghost" id="cdec" type="button">Decline</button><button class="ghost" id="cacc" type="button">Accept</button></div></div>
+<div id="consent" class="consent" role="dialog" aria-label="Cookie notice"><p><b>Cookies.</b> This site uses a cookie called “FEFW Relationship Status” to save your progress on this device for up to a year, and, if you accept, Google Analytics cookies to see how the site is used. If you decline, no cookies are set and Google Analytics runs in a limited mode without them; your progress lasts only until you refresh or close the page, and you can still export it. We remember your choice on this device. You can change it any time under Cookie settings in Current Status.</p><div class="mfoot"><button class="ghost" id="cdec" type="button">Decline</button><button class="ghost" id="cacc" type="button">Accept</button></div></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
 <script>
 // ---- Data (from the "Character Relationships" tab) ----
@@ -387,16 +387,16 @@ addEventListener('keydown',e=>{if(e.key==='Escape'&&modal.classList.contains('op
 
 // ---- Cookie notice, consent & analytics ----
 const GA_ID='G-PQLKRXZ2NQ';
-function loadGA(){if(window.__gaLoaded)return;window.__gaLoaded=true;window['ga-disable-'+GA_ID]=false;window.dataLayer=window.dataLayer||[];window.gtag=function(){dataLayer.push(arguments);};gtag('js',new Date());gtag('config',GA_ID);const s=document.createElement('script');s.async=true;s.src='https://www.googletagmanager.com/gtag/js?id='+GA_ID;document.head.appendChild(s);}
+function loadGA(){if(window.__gaLoaded)return;window.__gaLoaded=true;window.dataLayer=window.dataLayer||[];window.gtag=function(){dataLayer.push(arguments);};gtag('consent','default',{analytics_storage:consent==='granted'?'granted':'denied',ad_storage:'denied',ad_user_data:'denied',ad_personalization:'denied'});gtag('js',new Date());gtag('config',GA_ID);const s=document.createElement('script');s.async=true;s.src='https://www.googletagmanager.com/gtag/js?id='+GA_ID;document.head.appendChild(s);}
 function setConsent(v){consent=v;try{localStorage.setItem('fefw-consent',v);}catch(e){}
   $('#consent').classList.remove('open');
-  if(v==='granted'){persist();loadGA();toast('Cookies accepted');}
+  if(v==='granted'){persist();loadGA();gtag('consent','update',{analytics_storage:'granted'});toast('Cookies accepted');}
   else{clearCookie();try{localStorage.removeItem('rel-status-v2');localStorage.removeItem('rel-status-v1');}catch(e){}
-    window['ga-disable-'+GA_ID]=true;if(window.gtag)gtag('consent','update',{analytics_storage:'denied'});toast('Cookies declined');}}
+    loadGA();gtag('consent','update',{analytics_storage:'denied'});toast('Cookies declined');}}
 $('#cacc').addEventListener('click',()=>setConsent('granted'));
 $('#cdec').addEventListener('click',()=>setConsent('denied'));
 $('#cset').addEventListener('click',()=>$('#consent').classList.add('open'));
-if(consent==='granted')loadGA();
+loadGA();
 if(!consent)$('#consent').classList.add('open');
 
 // ---- Mobile/tablet: switch between graph and detailed report ----
